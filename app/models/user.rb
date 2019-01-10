@@ -1,4 +1,7 @@
 class User < ApplicationRecord
-  validates :name, :mail, :password, presence: true
-  validates :mail, format: { with: URI::MailTo::EMAIL_REGEXP }
+  # Model association
+  has_many :decks, dependent: :destroy
+
+  # Validation
+  validates_presence_of :name, :password
 end

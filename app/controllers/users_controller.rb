@@ -1,26 +1,43 @@
 class UsersController < ApplicationController
+  before_action :set_user, only: [:show, :update, :destroy]
+
+  # GET /users
   def index
-    render :json => User.all
+    @users = User.all
+    json_response(@users)
   end
 
+  # POST /users
   def create
-    @user = User.new(params[:user])
-    @user.save
-    render :json => @user
+    @user = User.create!(user_params)
+    json_response(@user, :created)
   end
 
+  # GET /users/:id
   def show
-    render :json => User.find(params[:id])
+    json_response(@user)
   end
 
+  # PUT /users/:id
   def update
-    @user = User.find(params[:id])
-    @user.update(params[:user])
-    render :json => @user
+    @user.update(user_params)
+    head :no_content
   end
 
+  # DELETE /users/:id
   def destroy
+    @user.destroy
+    head :no_content
+  end
+
+  private
+
+  def user_params
+    # whitelist params
+    params.permit(:name, :password)
+  end
+
+  def set_user
     @user = User.find(params[:id])
-    render :json => @user.destroy
   end
 end

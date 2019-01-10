@@ -21,11 +21,10 @@
 /storage/*
 !/storage/.keep
 
-/node_modules
-/yarn-error.log
-
-/public/assets
 .byebug_history
 
 # Ignore master key for decrypting credentials and more.
 /config/master.key
+
++# Ignore package locking system of npm cause it's pretty useless
++package-lock.json
