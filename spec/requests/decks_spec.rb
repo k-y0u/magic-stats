@@ -5,10 +5,11 @@ RSpec.describe 'Deck API', type: :request do
   let!(:decks) { create_list(:deck, 10, user_id: user.id) }
   let(:user_id) { user.id }
   let(:deck_id) { decks.first.id }
+  let(:headers) { valid_headers }
 
   # Test suite for GET /users/:user_id/decks
   describe 'GET /users/:user_id/decks' do
-    before { get "/users/#{user_id}/decks" }
+    before { get "/users/#{user_id}/decks", params: {}, headers: headers }
 
     context 'when user exists' do
       it 'returns status code 200' do
@@ -35,7 +36,7 @@ RSpec.describe 'Deck API', type: :request do
 
   # Test suite for GET /users/:user_id/decks/:deck_id
   describe 'GET /users/:user_id/decks/:deck_id' do
-    before { get "/users/#{user_id}/decks/#{deck_id}" }
+    before { get "/users/#{user_id}/decks/#{deck_id}", params: {}, headers: headers }
 
     context 'when user deck exists' do
       it 'return status code 200' do
@@ -65,7 +66,7 @@ RSpec.describe 'Deck API', type: :request do
     let(:valid_attributes) { { name: 'DeckOnFire', description: 'This deck is about fire.' } }
 
     context 'when request attributes are valid' do
-      before { post "/users/#{user_id}/decks", params: valid_attributes }
+      before { post "/users/#{user_id}/decks", params: valid_attributes.to_json, headers: headers }
 
       it 'returns status code 201' do
         expect(response).to have_http_status(201)
@@ -73,7 +74,7 @@ RSpec.describe 'Deck API', type: :request do
     end
 
     context 'when request is invalid' do
-      before { post "/users/#{user_id}/decks", params: {} }
+      before { post "/users/#{user_id}/decks", params: {}, headers: headers }
 
       it 'returns status code 422' do
         expect(response).to have_http_status(422)
@@ -89,7 +90,7 @@ RSpec.describe 'Deck API', type: :request do
   describe 'PUT /users/:user_id/decks/:deck_id' do
     let(:valid_attributes) { { name: 'Mario' } }
 
-    before { put "/users/#{user_id}/decks/#{deck_id}", params: valid_attributes }
+    before { put "/users/#{user_id}/decks/#{deck_id}", params: valid_attributes.to_json, headers: headers }
 
     context 'when deck exists' do
       it 'returns status code 204' do
@@ -117,7 +118,7 @@ RSpec.describe 'Deck API', type: :request do
 
   # Test suite for DELETE /users/:user_id/decks/:deck_id
   describe 'DELETE /users/:user_id/decks/:deck_id' do
-    before { delete "/users/#{user_id}/decks/#{deck_id}" }
+    before { delete "/users/#{user_id}/decks/#{deck_id}", params: {}, headers: headers }
 
     context 'when the deck exists' do
       it 'returns status code 204' do

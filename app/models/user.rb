@@ -6,5 +6,5 @@ class User < ApplicationRecord
   has_many :decks, dependent: :destroy
 
   # Validation
-  validates_presence_of :name, :password_digest
+  validates_presence_of :name, :password_digest, :password_confirmation
 end

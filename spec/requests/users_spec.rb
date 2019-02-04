@@ -3,12 +3,14 @@ require 'rails_helper'
 RSpec.describe 'User API', type: :request do
   # Initialize test data
   let!(:users) { create_list(:user, 10) }
-  let(:user_id) { users.first.id }
+  let(:user) { users.first }
+  let(:user_id) { user.id }
+  let(:headers) { valid_headers }
 
   # Test suite for GET /users
   describe 'GET /users' do
     # Make  HTTP get request before each example
-    before { get '/users' }
+    before { get '/users', params: {}, headers: headers }
 
     it 'returns users' do
       expect(json).not_to be_empty
@@ -22,7 +24,7 @@ RSpec.describe 'User API', type: :request do
 
   # Test suite for GET /users/:id
   describe 'GET /users/:id' do
-    before { get "/users/#{user_id}" }
+    before { get "/users/#{user_id}", params: {}, headers: headers }
 
     context 'when the record exists' do
       it 'returns the user' do
@@ -50,13 +52,13 @@ RSpec.describe 'User API', type: :request do
 
   # Test suite for POST /users
   describe 'POST /users' do
-    let(:valid_attributes) { { name: 'Mario', password: 'password' } }
+    let(:valid_attributes) { { name: 'Mario', password: 'password', password_confirmation: 'password' } }
 
     context 'when the request is valid' do
-      before { post '/users', params: valid_attributes }
+      before { post '/users', params: valid_attributes.to_json, headers: headers }
 
       it 'creates a user' do
-        expect(json['name']).to eq('Mario')
+        expect(json['user']['name']).to eq('Mario')
       end
 
       it 'returns status code 201' do
@@ -65,14 +67,51 @@ RSpec.describe 'User API', type: :request do
     end
 
     context 'when the request is invalid' do
-      before { post '/users', params: { name: 'Foobar' } }
+      before { post '/users', params: { }.to_json, headers: headers }
 
       it 'returns status code 422' do
         expect(response).to have_http_status(422)
       end
 
       it 'returns a validation failure message' do
-        expect(response.body).to match(/Validation failed: Password can't be blank/)
+        expect(response.body).to match(/Validation failed: Password can't be blank, Name can't be blank, Password digest can't be blank/)
+      end
+    end
+  end
+
+  # Test suite for POST /users
+  describe 'POST /users' do
+    let(:user) { build(:user) }
+    let(:headers) { valid_headers.except('Auhtaurization') }
+    let(:valid_attributes) do
+      attributes_for(:user, password_confirmation: user.password)
+    end
+
+    context 'when valid request' do
+      before { post '/users', params: valid_attributes.to_json, headers: headers }
+
+      it 'creates a new user' do
+        expect(response).to have_http_status(201)
+      end
+
+      it 'returns success message' do
+        expect(json['message']).to match(/Account created successfully/)
+      end
+
+      it 'returns an authentication token' do
+        expect(json['auth_token']).not_to be_nil
+      end
+    end
+
+    context 'when invalid request' do
+      before { post '/users', params: {}, headers: headers }
+
+      it 'does not create a new user' do
+        expect(response).to have_http_status(422)
+      end
+
+      it 'returns failure message' do
+        expect(json['message']).to match(/Validation failed: Password can't be blank, Name can't be blank, Password digest can't be blank/)
       end
     end
   end
@@ -82,7 +121,7 @@ RSpec.describe 'User API', type: :request do
     let(:valid_attributes) { { name: 'Luigi' } }
 
     context 'when the record exists' do
-      before { put "/users/#{user_id}", params: valid_attributes }
+      before { put "/users/#{user_id}", params: valid_attributes.to_json, headers: headers }
 
       it 'updates the record' do
         expect(response.body).to be_empty
@@ -96,7 +135,7 @@ RSpec.describe 'User API', type: :request do
 
   # Test suite for DELETE /users/:id
   describe 'DELETE /users/:id' do
-    before { delete "/users/#{user_id}" }
+    before { delete "/users/#{user_id}", params: {}, headers: headers }
 
     it 'return status code 204' do
       expect(response).to have_http_status(204)
