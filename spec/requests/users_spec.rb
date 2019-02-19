@@ -52,45 +52,19 @@ RSpec.describe 'User API', type: :request do
 
   # Test suite for POST /users
   describe 'POST /users' do
-    let(:valid_attributes) { { name: 'Mario', password: 'password', password_confirmation: 'password' } }
+    let(:headers) { valid_headers.except('Auhtaurization') }
+    let(:valid_attributes) { build(:user) }
+    let(:wrong_format_attributes) { { name: 'Mario', password: 'pass word', password_confirmation: 'pass word' } }
+    let(:too_long_string) { [*'a'..'z', *'A'..'Z', *0..9].shuffle[0, 43].join }
+    let(:too_long_attributes) { { name: too_long_string , password: too_long_string, password_confirmation: too_long_string } }
+    let(:too_short_attributes) { { name: 'Bi' , password: 'azertyu', password_confirmation: 'azertyu' } }
+    let(:not_unique_attributes) { { name: user.name, password: 'password', password_confirmation: 'password' } }
+    let(:wrong_confirmation_attributes) { { name: 'Luigi', password: 'password', password_confirmation: 'passwword' } }
 
     context 'when the request is valid' do
       before { post '/users', params: valid_attributes.to_json, headers: headers }
 
-      it 'creates a user' do
-        expect(json['user']['name']).to eq('Mario')
-      end
-
       it 'returns status code 201' do
-        expect(response).to have_http_status(201)
-      end
-    end
-
-    context 'when the request is invalid' do
-      before { post '/users', params: { }.to_json, headers: headers }
-
-      it 'returns status code 422' do
-        expect(response).to have_http_status(422)
-      end
-
-      it 'returns a validation failure message' do
-        expect(response.body).to match(/Validation failed: Password can't be blank, Name can't be blank, Password digest can't be blank/)
-      end
-    end
-  end
-
-  # Test suite for POST /users
-  describe 'POST /users' do
-    let(:user) { build(:user) }
-    let(:headers) { valid_headers.except('Auhtaurization') }
-    let(:valid_attributes) do
-      attributes_for(:user, password_confirmation: user.password)
-    end
-
-    context 'when valid request' do
-      before { post '/users', params: valid_attributes.to_json, headers: headers }
-
-      it 'creates a new user' do
         expect(response).to have_http_status(201)
       end
 
@@ -103,15 +77,90 @@ RSpec.describe 'User API', type: :request do
       end
     end
 
-    context 'when invalid request' do
-      before { post '/users', params: {}, headers: headers }
+    context 'when the attributes are missing' do
+      before { post '/users', params: { }.to_json, headers: headers }
 
-      it 'does not create a new user' do
+      it 'returns status code 422' do
         expect(response).to have_http_status(422)
       end
 
-      it 'returns failure message' do
-        expect(json['message']).to match(/Validation failed: Password can't be blank, Name can't be blank, Password digest can't be blank/)
+      it 'returns a validation failure message' do
+        expect(response.body).to match(/Validation failed/)
+        expect(response.body).to match(/Password can't be blank/)
+        expect(response.body).to match(/Password confirmation can't be blank/)
+        expect(response.body).to match(/Password digest can't be blank/)
+        expect(response.body).to match(/Name can't be blank/)
+      end
+
+      it 'returns an authentication token nil' do
+        expect(json['auth_token']).to be_nil
+      end
+    end
+
+    context 'when passowrd attribute contain a forbidden character' do
+      before { post '/users', params: wrong_format_attributes.to_json, headers: headers }
+
+      it 'returns status code 422' do
+        expect(response).to have_http_status(422)
+      end
+
+      it 'returns a validation failure message' do
+        expect(response.body).to match(/Validation failed/)
+        expect(response.body).to match(/Password should not contain whitespace character/)
+      end
+    end
+
+    context 'when the attributes are too long' do
+      before { post '/users', params: too_long_attributes.to_json, headers: headers }
+
+      it 'returns status code 422' do
+        expect(response).to have_http_status(422)
+      end
+
+      it 'returns a validation failure message' do
+        expect(response.body).to match(/Validation failed/)
+        expect(response.body).to match(/Password is too long/)
+        expect(response.body).to match(/Name is too long/)
+      end
+    end
+
+    context 'when the attributes are too short' do
+      before { post '/users', params: too_short_attributes.to_json, headers: headers }
+
+      it 'returns status code 422' do
+        expect(response).to have_http_status(422)
+      end
+
+      it 'returns a validation failure message' do
+        expect(response.body).to match(/Validation failed/)
+        expect(response.body).to match(/Password is too short/)
+        expect(response.body).to match(/Name is too short/)
+      end
+    end
+
+    context 'when name attribute is not unique' do
+      before { post '/users', params: not_unique_attributes.to_json, headers: headers }
+
+      it 'returns status code 422' do
+        expect(response).to have_http_status(422)
+      end
+
+      it 'returns a validation failure message' do
+        expect(response.body).to match(/Validation failed/)
+        expect(response.body).to match(/Name has already been taken/)
+      end
+    end
+
+    context 'when password_confirmation attribute is not equal to password attribute' do
+      before { post '/users', params: wrong_confirmation_attributes.to_json, headers: headers }
+
+      it 'returns status code 422' do
+        expect(response).to have_http_status(422)
+      end
+
+      it 'returns a validation failure message' do
+        expect(response.body).to match(/Validation failed/)
+        expect(response.body).to match(/Password confirmation doesn't match Password/)
       end
     end
   end
