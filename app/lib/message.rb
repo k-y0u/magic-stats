@@ -30,4 +30,8 @@ class Message
   def self.expired_token
     'Sorry, your token has expired. Please login to continue.'
   end
+
+  def self.invalid_user
+    'Invalid user account. It\'s only possible to modify your own account'
+  end
 end

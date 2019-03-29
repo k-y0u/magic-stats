@@ -5,6 +5,7 @@ module ExceptionHandler
   class AuthenticationError < StandardError; end
   class MissingToken < StandardError; end
   class InvalidToken < StandardError; end
+  class InvalidUser < StandardError; end
 
   included do
     rescue_from ActiveRecord::RecordNotFound, with: :four_zero_four
@@ -14,6 +15,7 @@ module ExceptionHandler
     rescue_from ExceptionHandler::AuthenticationError, with: :four_zero_one
     rescue_from ExceptionHandler::MissingToken, with: :four_twenty_two
     rescue_from ExceptionHandler::InvalidToken, with: :four_twenty_two
+    rescue_from ExceptionHandler::InvalidUser, with: :four_zero_three
   end
 
   private
@@ -21,6 +23,11 @@ module ExceptionHandler
   # JSON response with message; Status code 401 - unauthorized
   def four_zero_one(e)
     json_response({ message: e.message }, :unauthorized)
+  end
+
+  # JSON response with message; Status code 403 - forbidden
+  def four_zero_three(e)
+    json_response({ message: e.message }, :forbidden)
   end
 
   # JSON response with message; Status code 404 - not found

@@ -53,7 +53,7 @@ RSpec.describe 'User API', type: :request do
   # Test suite for POST /users
   describe 'POST /users' do
     let(:headers) { valid_headers.except('Auhtaurization') }
-    let(:valid_attributes) { build(:user) }
+    let(:valid_attributes) { { name: 'Mario', password: 'password', password_confirmation: 'password' } }
     let(:wrong_format_attributes) { { name: 'Mario', password: 'pass word', password_confirmation: 'pass word' } }
     let(:too_long_string) { [*'a'..'z', *'A'..'Z', *0..9].shuffle[0, 43].join }
     let(:too_long_attributes) { { name: too_long_string , password: too_long_string, password_confirmation: too_long_string } }
@@ -169,15 +169,27 @@ RSpec.describe 'User API', type: :request do
   describe 'PUT /users/:id' do
     let(:valid_attributes) { { name: 'Luigi' } }
 
-    context 'when the record exists' do
+    context 'when the record matches authenticated user' do
       before { put "/users/#{user_id}", params: valid_attributes.to_json, headers: headers }
+
+      it 'returns status code 204' do
+        expect(response).to have_http_status(204)
+      end
 
       it 'updates the record' do
         expect(response.body).to be_empty
       end
+    end
 
-      it 'returns status code 204' do
-        expect(response).to have_http_status(204)
+    context 'when the record does not match authenticate user' do
+      before { put "/users/#{users[2].id}", params: valid_attributes.to_json, headers: headers }
+
+      it 'returns status code 403' do
+        expect(response).to have_http_status(403)
+      end
+
+      it 'returns a validation failure message' do
+        expect(response.body).to match(/Invalid user account/)
       end
     end
   end
