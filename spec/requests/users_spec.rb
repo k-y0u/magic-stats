@@ -196,10 +196,24 @@ RSpec.describe 'User API', type: :request do
 
   # Test suite for DELETE /users/:id
   describe 'DELETE /users/:id' do
-    before { delete "/users/#{user_id}", params: {}, headers: headers }
+    context 'when the record matches authenticated user' do
+      before { delete "/users/#{user_id}", params: {}, headers: headers }
 
-    it 'return status code 204' do
-      expect(response).to have_http_status(204)
+      it 'return status code 204' do
+        expect(response).to have_http_status(204)
+      end
+    end
+
+    context 'when the record does not match authenticate user' do
+      before { delete "/users/#{users[2].id}", params: {}, headers: headers }
+
+      it 'returns status code 403' do
+        expect(response).to have_http_status(403)
+      end
+
+      it 'returns a validation failure message' do
+        expect(response.body).to match(/Invalid user account/)
+      end
     end
   end
 end

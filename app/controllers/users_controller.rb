@@ -36,8 +36,15 @@ class UsersController < ApplicationController
 
   # DELETE /users/:id
   def destroy
-    current_user.destroy
-    head :no_content
+    if params[:id] == (current_user.id.to_s)
+      current_user.destroy
+      head :no_content
+    else
+      raise(
+        ExceptionHandler::InvalidUser,
+        Message.invalid_user
+      )
+    end
   end
 
   private
