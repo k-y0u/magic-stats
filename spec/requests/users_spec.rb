@@ -53,7 +53,7 @@ RSpec.describe 'User API', type: :request do
   # Test suite for POST /users
   describe 'POST /users' do
     let(:headers) { valid_headers.except('Auhtaurization') }
-    let(:valid_attributes) { { name: 'Mario', password: 'password', password_confirmation: 'password' } }
+    let(:valid_attributes) { { name: 'Mario', password: 'Pas$w0rd', password_confirmation: 'Pas$w0rd' } }
     let(:wrong_format_attributes) { { name: 'Mario', password: 'pass word', password_confirmation: 'pass word' } }
     let(:too_long_string) { [*'a'..'z', *'A'..'Z', *0..9].shuffle[0, 43].join }
     let(:too_long_attributes) { { name: too_long_string , password: too_long_string, password_confirmation: too_long_string } }
@@ -86,10 +86,9 @@ RSpec.describe 'User API', type: :request do
 
       it 'returns a validation failure message' do
         expect(response.body).to match(/Validation failed/)
+        expect(response.body).to match(/Name can't be blank/)
         expect(response.body).to match(/Password can't be blank/)
         expect(response.body).to match(/Password confirmation can't be blank/)
-        expect(response.body).to match(/Password digest can't be blank/)
-        expect(response.body).to match(/Name can't be blank/)
       end
 
       it 'returns an authentication token nil' do
