@@ -10,7 +10,19 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2019_01_11_220926) do
+ActiveRecord::Schema.define(version: 2019_06_22_211855) do
+
+  create_table "cards", force: :cascade do |t|
+    t.string "name"
+    t.string "cost"
+    t.string "type"
+    t.string "kind"
+    t.string "rarity"
+    t.text "description"
+    t.text "quotation"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+  end
 
   create_table "decks", force: :cascade do |t|
     t.string "name"
